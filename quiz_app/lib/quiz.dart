@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/data/questions.dart';
 
 import 'package:quiz_app/start_screen.dart';
 import 'package:quiz_app/questions_screen.dart';
+import 'package:quiz_app/results_screen.dart';
 
 class Quiz extends StatefulWidget {
   const Quiz({super.key});
@@ -15,8 +17,9 @@ class Quiz extends StatefulWidget {
 class _QuizState extends State<Quiz> {
   // activeScreen is specified as a Widget since Widget is the general type and otherwise, the variable would infer its type from the value and so be of type StartScreen
   Widget? activeScreen;
-
   var differentActiveScreen = 'start-screen';
+
+  List<String> selectedAnswers = [];
 
   @override
   void initState() {
@@ -29,23 +32,39 @@ class _QuizState extends State<Quiz> {
 
   void switchScreen() {
     setState(() {
-      activeScreen = const QuestionsScreen();
+      activeScreen = QuestionsScreen(onSelectAnswer: chooseAnswer);
 
       differentActiveScreen = 'questions-screen';
     });
+  }
+
+  void chooseAnswer(String answer) {
+    selectedAnswers.add(answer);
+
+    if (selectedAnswers.length == questions.length) {
+      setState(() {
+        differentActiveScreen = 'results-screen';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidget = differentActiveScreen == 'start-screen'
         ? StartScreen(switchScreen)
-        : const QuestionsScreen();
+        : QuestionsScreen(onSelectAnswer: chooseAnswer);
 
     // instead of using a ternary expression, we can use an if statement
     Widget differentScreenWidget = StartScreen(switchScreen);
 
     if (differentActiveScreen == 'questions-screen') {
-      differentScreenWidget = const QuestionsScreen();
+      differentScreenWidget = QuestionsScreen(onSelectAnswer: chooseAnswer);
+    }
+
+    if (differentActiveScreen == 'results-screen') {
+      differentScreenWidget = ResultsScreen(
+        chosenAnswers: selectedAnswers,
+      );
     }
 
     return MaterialApp(
@@ -61,9 +80,12 @@ class _QuizState extends State<Quiz> {
               end: Alignment.bottomRight,
             ),
           ),
-          child: differentActiveScreen == 'start-screen'
+          child: differentScreenWidget,
+          /*differentActiveScreen == 'start-screen'
               ? StartScreen(switchScreen)
-              : const QuestionsScreen(), //differentScreenWidget, //screenWidget, //activeScreen,
+              : QuestionsScreen(
+                  onSelectAnswer:
+                      chooseAnswer),*/ //screenWidget, //activeScreen,
         ),
       ),
     );
